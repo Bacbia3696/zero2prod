@@ -1,24 +1,10 @@
 use std::net::TcpListener;
 
-use actix_web::{dev::Server, get, post, web::Form, App, HttpResponse, HttpServer, Responder};
-use serde::Deserialize;
+use actix_web::{dev::Server, App, HttpServer};
+use routes::{health_check, subscribe};
 
-#[get("/health_check")]
-async fn health_check() -> impl Responder {
-    HttpResponse::Ok().finish()
-}
-
-#[derive(Deserialize, Debug)]
-struct FormData {
-    name: String,
-    email: String,
-}
-
-#[post("/subscriptions")]
-async fn subscribe(Form(form): Form<FormData>) -> impl Responder {
-    dbg!(form);
-    HttpResponse::Ok().finish()
-}
+pub mod configuration;
+mod routes;
 
 pub async fn run(listener: TcpListener) -> eyre::Result<Server> {
     Ok(

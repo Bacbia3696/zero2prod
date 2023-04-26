@@ -1,6 +1,11 @@
 use std::net::TcpListener;
 
-use crate::run;
+use sqlx::{query, Connection, PgConnection};
+
+use crate::{
+    configuration::{self, get_configuration},
+    run,
+};
 
 #[tokio::test]
 async fn health_check_work() {
@@ -17,6 +22,11 @@ async fn health_check_work() {
 #[tokio::test]
 async fn subscribe_return_200_for_valid_form_data() {
     let address = spawn_test().await;
+    let configuration = get_configuration().unwrap();
+    let connection_string = configuration.database.connection_string();
+    let mut connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to connect DB");
     let client = reqwest::Client::new();
 
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
@@ -28,6 +38,14 @@ async fn subscribe_return_200_for_valid_form_data() {
         .await
         .expect("Failed to send request");
 
+    // make sure that subscriptions is saved
+    let saved = query!("select email, name from subscriptions")
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to query DB");
+
+    assert_eq!("ursula_le_guin@gmai.com", saved.email);
+    assert_eq!("le guiin", saved.name);
     assert_eq!(http::StatusCode::OK, res.status())
 }
 

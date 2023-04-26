@@ -1,10 +1,15 @@
+# -------------------------------------------------
 GET http://localhost:8000/health_check
 
+
+# -------------------------------------------------
 POST http://localhost:8000/subscriptions
 Content-Type: application/x-www-form-urlencoded
 
 name=le%20guin&email=ursula_le_guin%40gmail.com
 
+
+# -------------------------------------------------
 POST http://localhost:8000/subscriptions
 Content-Type: application/x-www-form-urlencoded
 

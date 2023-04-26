@@ -1,9 +1,14 @@
 use std::net::TcpListener;
 
+use zero2prod::{configuration::get_configuration, run};
+
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     println!("Listen http server...");
-    let listener = TcpListener::bind("127.0.0.1:8000")?;
-    zero2prod::run(listener).await?.await?;
+
+    let configuration = get_configuration()?;
+
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", configuration.application_port))?;
+    run(listener).await?.await?;
     Ok(())
 }
