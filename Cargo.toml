@@ -10,6 +10,7 @@ actix-web = "4.3.1"
 config = "0.13.3"
 eyre = "0.6.8"
 http = "0.2.9"
+secrecy = { version = "0.8.0", features = ["serde"] }
 serde = { version = "1.0.160", features = ["derive"] }
 sqlx = { version = "0.6.3", default-features = false, features = [
   "runtime-actix-rustls",
@@ -22,6 +23,8 @@ sqlx = { version = "0.6.3", default-features = false, features = [
 ] }
 tokio = { version = "1.28.0", features = ["full"] }
 tracing = { version = "0.1.38", features = ["log"] }
+tracing-actix-web = "0.7.4"
+# tracing-bunyan-formatter = "0.3.7"
 tracing-subscriber = { version = "0.3.17", features = [
   "env-filter",
   "registry",
@@ -30,6 +33,7 @@ tracing-subscriber = { version = "0.3.17", features = [
 uuid = { version = "1.3.1", features = ["v4"] }
 
 [dev-dependencies]
+once_cell = "1.17.1"
 reqwest = { version = "0.11.16", default-features = false, features = [
   "rustls-tls",
 ] }

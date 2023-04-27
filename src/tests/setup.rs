@@ -1,5 +1,6 @@
 use std::net::TcpListener;
 
+use once_cell::sync::Lazy;
 use sqlx::{migrate, Connection, Executor, PgConnection, PgPool};
 
 use uuid::Uuid;
@@ -31,7 +32,12 @@ pub async fn spawn_test() -> AppTest {
     }
 }
 
+static TRACING: Lazy<()> = Lazy::new(|| {
+    tracing_subscriber::fmt().init();
+});
+
 async fn configure_database(db: &configuration::DatabaseSettings) -> PgPool {
+    Lazy::force(&TRACING);
     // create DB
     PgConnection::connect(&db.connection_string_without_db())
         .await
