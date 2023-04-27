@@ -1,6 +1,6 @@
 use std::{net::TcpListener, time::Duration};
 
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{postgres::PgPoolOptions};
 use zero2prod::{
     configuration::{get_configuration, AppSettings},
     run, telemetry,

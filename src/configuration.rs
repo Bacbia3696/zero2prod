@@ -1,4 +1,4 @@
-use config::Environment;
+
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 #[derive(Deserialize, Debug)]
