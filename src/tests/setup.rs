@@ -1,6 +1,7 @@
-use std::{net::TcpListener, os::unix::thread};
+use std::net::TcpListener;
 
-use sqlx::{migrate, query, Connection, Executor, PgConnection, PgPool};
+use sqlx::{migrate, Connection, Executor, PgConnection, PgPool};
+
 use uuid::Uuid;
 
 use crate::{
@@ -11,7 +12,6 @@ use crate::{
 pub struct AppTest {
     pub address: String,
     pub pool: PgPool,
-    configuration: configuration::Settings,
 }
 
 pub async fn spawn_test() -> AppTest {
@@ -28,7 +28,6 @@ pub async fn spawn_test() -> AppTest {
     AppTest {
         address: format!("http://{}", listener.local_addr().unwrap().to_string()),
         pool,
-        configuration,
     }
 }
 
