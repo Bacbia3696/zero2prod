@@ -7,7 +7,7 @@ use serde::Deserialize;
 use sqlx::{query, types::chrono::Utc, PgPool};
 
 #[derive(Deserialize, Debug)]
-struct FormData {
+pub struct FormData {
     name: String,
     email: String,
 }
