@@ -1,13 +1,19 @@
-//! src/configuration.rs
-
+use config::Environment;
 use secrecy::{ExposeSecret, Secret};
-#[derive(serde::Deserialize, Debug)]
+use serde::Deserialize;
+#[derive(Deserialize, Debug)]
 pub struct Settings {
     pub database: DatabaseSettings,
-    pub application_port: u16,
+    pub application: AppSettings,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
+pub struct AppSettings {
+    pub host: String,
+    pub port: String,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,
@@ -17,8 +23,16 @@ pub struct DatabaseSettings {
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
+    // Detect the running environment.
+    // Default to `local` if unspecified.
+    let environment = std::env::var("APP_ENVIRONMENT").unwrap_or("local".into());
+
     config::Config::builder()
-        .add_source(config::File::with_name("configuration.yaml"))
+        .add_source(config::File::with_name("configuration/base"))
+        .add_source(config::File::with_name(&format!(
+            "configuration/{environment}"
+        )))
+        .add_source(config::Environment::with_prefix("APP"))
         .build()?
         .try_deserialize()
 }

@@ -1,19 +1,25 @@
-use std::net::TcpListener;
+use std::{net::TcpListener, time::Duration};
 
-use sqlx::PgPool;
-use zero2prod::{configuration::get_configuration, run, telemetry};
+use sqlx::{postgres::PgPoolOptions, PgPool};
+use zero2prod::{
+    configuration::{get_configuration, AppSettings},
+    run, telemetry,
+};
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     telemetry();
 
     let configuration = get_configuration()?;
-    let port = configuration.application_port;
+    let AppSettings { host, port } = configuration.application;
 
-    let pool = PgPool::connect(&configuration.database.connection_string()).await?;
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_secs(2))
+        .connect_lazy(&configuration.database.connection_string())?;
 
-    eprintln!("start listening on {port}...");
-    let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
+    let url = format!("{host}:{port}");
+    eprintln!("start listening on {url}...");
+    let listener = TcpListener::bind(url)?;
     run(listener, pool).await?.await?;
     Ok(())
 }
