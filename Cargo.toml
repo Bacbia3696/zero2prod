@@ -31,6 +31,7 @@ tracing-subscriber = { version = "0.3.17", features = [
   "registry",
   "json",
 ] }
+unicode-segmentation = "1.10.1"
 uuid = { version = "1.3.1", features = ["v4"] }
 
 [dev-dependencies]

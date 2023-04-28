@@ -9,6 +9,7 @@ pub mod configuration;
 mod routes;
 mod telemetry;
 pub use telemetry::*;
+mod domain;
 
 pub async fn run(listener: TcpListener, pool: PgPool) -> eyre::Result<Server> {
     Ok(HttpServer::new(move || {
