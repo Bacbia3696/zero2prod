@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::{
     configuration::{self, get_configuration},
-    run,
+    run, telemetry,
 };
 
 pub struct AppTest {
@@ -32,14 +32,12 @@ pub async fn spawn_test() -> AppTest {
     }
 }
 
-static TRACING: Lazy<()> = Lazy::new(|| {
-    tracing_subscriber::fmt().init();
-});
+static TRACING: Lazy<()> = Lazy::new(|| telemetry("info"));
 
 async fn configure_database(db: &configuration::DatabaseSettings) -> PgPool {
     Lazy::force(&TRACING);
     // create DB
-    PgConnection::connect(&db.connection_string_without_db())
+    PgConnection::connect_with(&db.without_db())
         .await
         .expect("Failed to connect DB")
         .execute(format!(r#"create database "{}";"#, &db.database_name).as_str())
@@ -47,7 +45,7 @@ async fn configure_database(db: &configuration::DatabaseSettings) -> PgPool {
         .expect("Failed to create database.");
 
     // connect to DB and run migration
-    let pool = PgPool::connect(&db.connection_string())
+    let pool = PgPool::connect_with(db.withdb())
         .await
         .expect("Failed to connect DB");
     migrate!("./migrations")

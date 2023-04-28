@@ -1,9 +1,11 @@
 use sqlx::query;
+use tracing::info;
 
 use crate::tests::setup::*;
 
 #[tokio::test]
 async fn subscribe_return_200_for_valid_form_data() {
+    info!("subscribe_return_200_for_valid_form_data");
     let app = spawn_test().await;
     let client = reqwest::Client::new();
 
@@ -29,6 +31,7 @@ async fn subscribe_return_200_for_valid_form_data() {
 
 #[tokio::test]
 async fn subscribe_return_400_when_data_is_missing() {
+    info!("subscribe_return_400_when_data_is_missing");
     let app = spawn_test().await;
     let client = reqwest::Client::new();
 
