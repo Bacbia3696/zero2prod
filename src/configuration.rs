@@ -39,7 +39,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         .add_source(config::File::with_name(&format!(
             "configuration/{environment}"
         )))
-        .add_source(config::Environment::with_prefix("app").separator("__"))
+        .add_source(config::Environment::with_prefix("app_").separator("__"))
         .build()?
         .try_deserialize()
 }

@@ -1,9 +1,16 @@
 # -------------------------------------------------
 GET http://localhost:8000/health_check
+# -------------------------------------------------
+GET https://zero2prod-k5bl8.ondigitalocean.app/health_check
 
 
 # -------------------------------------------------
 POST http://localhost:8000/subscriptions
+Content-Type: application/x-www-form-urlencoded
+
+name=le%20guin&email=ursula_le_guin%40gmail.com
+# -------------------------------------------------
+POST https://zero2prod-k5bl8.ondigitalocean.app/subscriptions
 Content-Type: application/x-www-form-urlencoded
 
 name=le%20guin&email=ursula_le_guin%40gmail.com
