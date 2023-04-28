@@ -5,10 +5,19 @@ use sqlx::{
     postgres::{PgConnectOptions, PgSslMode},
     ConnectOptions,
 };
+
+use crate::domain::SubscriberEmail;
 #[derive(Deserialize, Debug)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application: AppSettings,
+    pub email_client: EmailClientSettings,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct EmailClientSettings {
+    pub base_url: String,
+    pub sender_email: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -27,6 +36,12 @@ pub struct DatabaseSettings {
     pub host: String,
     pub database_name: String,
     pub require_ssl: bool,
+}
+
+impl EmailClientSettings {
+    pub fn sender(&self) -> Result<SubscriberEmail, String> {
+        SubscriberEmail::parse(self.sender_email.clone())
+    }
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {

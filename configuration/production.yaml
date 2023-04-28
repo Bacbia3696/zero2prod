@@ -1,3 +1,6 @@
 application:
   host: 0.0.0.0
   require_ssl: true
+email_client:
+  base_url: "localhost"
+  sender_email: "bacbia3696@gmail.com"

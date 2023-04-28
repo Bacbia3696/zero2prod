@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::{
     configuration::{self, get_configuration},
-    run, telemetry,
+    run, telemetry, email_client::EmailClient,
 };
 
 pub struct AppTest {
@@ -22,7 +22,13 @@ pub async fn spawn_app() -> AppTest {
     configuration.database.database_name = Uuid::new_v4().to_string();
 
     let pool = configure_database(&configuration.database).await;
-    let server = run(listener.try_clone().unwrap(), PgPool::clone(&pool))
+
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address.");
+    let email_client = EmailClient::new(configuration.email_client.base_url, sender_email.clone());
+    let server = run(listener.try_clone().unwrap(), PgPool::clone(&pool), email_client)
         .await
         .expect("Failed to bind address");
     let _ = tokio::spawn(server);

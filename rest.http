@@ -21,3 +21,37 @@ POST http://localhost:8000/subscriptions
 Content-Type: application/x-www-form-urlencoded
 
 name=le%20guin
+
+
+# -------------------------------------------------
+# Send email
+POST https://api.sendgrid.com/v3/mail/send
+Host: api.sendgrid.com
+Authorization: Bearer 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
+Content-Type: application/json
+
+{
+  "personalizations": [
+    {
+      "to": [
+        {
+          "email": "test@example.com"
+        }
+      ]
+    }
+  ],
+  "from": {
+    "email": "bacbia3696@gmail.com"
+  },
+  "subject": "Sending with SendGrid is Fun",
+  "content": [
+    {
+      "type": "text/plain",
+      "value": "and easy to do anywhere, even with cURL"
+    },
+    {
+      "type": "text/html",
+      "value": "<html><body><strong>Hello</strong> dear Postmark user.</body></html>"
+    }
+  ]
+}
