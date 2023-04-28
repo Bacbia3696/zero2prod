@@ -6,7 +6,7 @@ use crate::tests::setup::*;
 #[tokio::test]
 async fn subscribe_return_200_for_valid_form_data() {
     info!("subscribe_return_200_for_valid_form_data");
-    let app = spawn_test().await;
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
 
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
@@ -32,7 +32,7 @@ async fn subscribe_return_200_for_valid_form_data() {
 #[tokio::test]
 async fn subscribe_return_400_when_data_is_missing() {
     info!("subscribe_return_400_when_data_is_missing");
-    let app = spawn_test().await;
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
 
     let test_cases = vec![

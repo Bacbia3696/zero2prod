@@ -15,7 +15,7 @@ pub struct AppTest {
     pub pool: PgPool,
 }
 
-pub async fn spawn_test() -> AppTest {
+pub async fn spawn_app() -> AppTest {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
 
     let mut configuration = get_configuration().unwrap();

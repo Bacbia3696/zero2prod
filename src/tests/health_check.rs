@@ -1,9 +1,9 @@
-use crate::tests::setup::spawn_test;
+use crate::tests::setup::spawn_app;
 
 #[tokio::test]
 async fn health_check_work() {
     // setup server
-    let app = spawn_test().await;
+    let app = spawn_app().await;
 
     let res = reqwest::get(format!("{}/health_check", app.address))
         .await
