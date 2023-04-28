@@ -38,19 +38,19 @@ services:
     routes:
       - path: /
     envs:
-      - key: APP__DATABASE__USERNAME
+      - key: APP_DATABASE__USERNAME
         scope: RUN_TIME
         value: ${newsletter.USERNAME}
-      - key: APP__DATABASE__PASSWORD
+      - key: APP_DATABASE__PASSWORD
         scope: RUN_TIME
         value: ${newsletter.PASSWORD}
-      - key: APP__DATABASE__HOST
+      - key: APP_DATABASE__HOST
         scope: RUN_TIME
         value: ${newsletter.HOSTNAME}
-      - key: APP__DATABASE__PORT
+      - key: APP_DATABASE__PORT
         scope: RUN_TIME
         value: ${newsletter.PORT}
-      - key: APP__DATABASE__DATABASE_NAME
+      - key: APP_DATABASE__DATABASE_NAME
         scope: RUN_TIME
         value: ${newsletter.DATABASE}
 databases:
