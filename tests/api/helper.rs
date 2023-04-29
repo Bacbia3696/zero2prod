@@ -7,8 +7,8 @@ use uuid::Uuid;
 
 use zero2prod::{
     configuration::{self, get_configuration},
-    email_client::EmailClient,
-    telemetry, startup::run,
+    startup::Application,
+    telemetry,
 };
 
 static TRACING: Lazy<()> = Lazy::new(|| telemetry("info"));
@@ -45,32 +45,11 @@ pub async fn spawn_app() -> AppTest {
 
     let pool = configure_database(&configuration.database).await;
 
-    let sender_email = configuration
-        .email_client
-        .sender()
-        .expect("Invalid sender email address.");
-    let timeout = configuration.email_client.timeout();
-    let email_client = EmailClient::new(
-        configuration.email_client.base_url,
-        sender_email.clone(),
-        configuration.email_client.authorization_token,
-        timeout,
-    );
-    let address = format!(
-        "{}:{}",
-        configuration.application.host, configuration.application.port
-    );
-    let listener = TcpListener::bind(address).unwrap();
-    let server = run(
-        listener.try_clone().unwrap(),
-        PgPool::clone(&pool),
-        email_client,
-    )
-    .await
-    .expect("Failed to bind address");
-    let _ = tokio::spawn(server);
+    let app = Application::build(configuration).await.unwrap();
+
+    let _ = tokio::spawn(app.server);
     AppTest {
-        address: format!("http://{}", listener.local_addr().unwrap().to_string()),
+        address: format!("http://127.0.0.1:{}", app.port),
         pool,
     }
 }

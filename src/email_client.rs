@@ -109,6 +109,7 @@ mod tests {
         },
         Fake, Faker,
     };
+    use tokio::time::timeout;
     use wiremock::{
         matchers::{header, header_exists, method, path},
         Mock, MockServer, ResponseTemplate,
@@ -120,7 +121,7 @@ mod tests {
     impl wiremock::Match for SendEmailBodyMatcher {
         fn matches(&self, request: &wiremock::Request) -> bool {
             // Try to parse the body as a JSON value
-            let result: Result<serde_json::Value, _> = serde_json::from_slice(&request.body);
+            let _result: Result<serde_json::Value, _> = serde_json::from_slice(&request.body);
 
             true
         }
@@ -151,7 +152,7 @@ mod tests {
     async fn send_email_fires_a_request_to_base_url() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
+        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
@@ -178,7 +179,7 @@ mod tests {
     async fn send_email_response_success() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
+        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
@@ -192,8 +193,8 @@ mod tests {
             .await;
 
         let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let subject: String = Sentence(1..2).fake();
-        let content: String = Paragraph(1..10).fake();
+        let subject = subject();
+        let content = content();
 
         // Act
         let res = email_client
@@ -206,7 +207,7 @@ mod tests {
     async fn send_email_response_error() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
+        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
@@ -231,10 +232,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn send_email_response_timout() {
+    async fn send_email_response_timeout() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
+        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
@@ -248,8 +249,8 @@ mod tests {
             .await;
 
         let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let subject: String = Sentence(1..2).fake();
-        let content: String = Paragraph(1..10).fake();
+        let subject = subject();
+        let content = content();
 
         // Act
         let res = email_client

@@ -1,8 +1,4 @@
-use zero2prod::{
-    configuration::get_configuration,
-    startup::build,
-    telemetry,
-};
+use zero2prod::{configuration::get_configuration, startup::Application, telemetry};
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
@@ -11,6 +7,7 @@ async fn main() -> eyre::Result<()> {
     let configuration = get_configuration()?;
     dbg!(&configuration);
 
-    build(configuration).await?.await?;
+    let app = Application::build(configuration).await?;
+    app.run_util_stopped().await?;
     Ok(())
 }
