@@ -35,7 +35,7 @@ Content-Type: application/json
     {
       "to": [
         {
-          "email": "bacbia3696@gmail.com"
+          "email": "test@example.com"
         }
       ]
     }

@@ -9,7 +9,7 @@ database:
   database_name: "newsletter"
   require_ssl: false
 email_client:
-  base_url: "localhost"
+  base_url: "http://localhost"
   sender_email: "test@gmail.com"
   authorization_token: "my-secret-token"
   timeout_milliseconds: 10000

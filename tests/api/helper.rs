@@ -1,21 +1,21 @@
-use std::net::TcpListener;
-
 use once_cell::sync::Lazy;
 use sqlx::{migrate, Connection, Executor, PgConnection, PgPool};
 
 use uuid::Uuid;
 
+use wiremock::MockServer;
 use zero2prod::{
     configuration::{self, get_configuration},
     startup::Application,
     telemetry,
 };
 
-static TRACING: Lazy<()> = Lazy::new(|| telemetry("info"));
+static TRACING: Lazy<()> = Lazy::new(|| telemetry("zero2prod=info"));
 
 pub struct AppTest {
     pub address: String,
     pub pool: PgPool,
+    pub email_server: MockServer,
 }
 
 impl AppTest {
@@ -34,23 +34,27 @@ impl AppTest {
 pub async fn spawn_app() -> AppTest {
     Lazy::force(&TRACING);
 
+    let email_server = MockServer::start().await;
     // Randomise configuration to ensure test isolation
     let configuration = {
-        let mut c = get_configuration().expect("Failed to read configuration."); // Use a different database for each test case
+        let mut c = get_configuration().expect("Failed to read configuration.");
+        // Use a different database for each test case
         c.database.database_name = Uuid::new_v4().to_string();
         // Use a random OS port
         c.application.port = 0;
+        // Use the mock server as email API
+        c.email_client.base_url = email_server.uri();
         c
     };
 
     let pool = configure_database(&configuration.database).await;
-
     let app = Application::build(configuration).await.unwrap();
 
     let _ = tokio::spawn(app.server);
     AppTest {
-        address: format!("http://127.0.0.1:{}", app.port),
+        address: format!("http://localhost:{}", app.port),
         pool,
+        email_server,
     }
 }
 

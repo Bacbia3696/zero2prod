@@ -109,7 +109,6 @@ mod tests {
         },
         Fake, Faker,
     };
-    use tokio::time::timeout;
     use wiremock::{
         matchers::{header, header_exists, method, path},
         Mock, MockServer, ResponseTemplate,
@@ -152,7 +151,6 @@ mod tests {
     async fn send_email_fires_a_request_to_base_url() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
@@ -179,7 +177,6 @@ mod tests {
     async fn send_email_response_success() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
@@ -207,7 +204,6 @@ mod tests {
     async fn send_email_response_error() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
@@ -235,7 +231,6 @@ mod tests {
     async fn send_email_response_timeout() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let _sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists(http::header::AUTHORIZATION))
