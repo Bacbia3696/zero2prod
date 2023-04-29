@@ -18,7 +18,7 @@ services:
       branch: main
       # Deploy a new version on every commit to `main`!
       # Continuous Deployment, here we come!
-      deploy_on_push: true
+      deploy_on_push: false
       # !!! Fill in with your details
       # e.g. LukeMathWalker/zero-to-production
       repo: Bacbia3696/zero2prod

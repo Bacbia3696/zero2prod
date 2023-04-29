@@ -27,7 +27,7 @@ name=le%20guin
 # Send email
 POST https://api.sendgrid.com/v3/mail/send
 Host: api.sendgrid.com
-Authorization: Bearer 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
+Authorization: Bearer {{SENDGRID_TOKEN}}
 Content-Type: application/json
 
 {
@@ -35,7 +35,7 @@ Content-Type: application/json
     {
       "to": [
         {
-          "email": "test@example.com"
+          "email": "bacbia3696@gmail.com"
         }
       ]
     }

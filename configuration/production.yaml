@@ -1,6 +1,8 @@
+# NOTE: please do not push any sessitive infomation here
+# because it will be pushed to public repository
 application:
   host: 0.0.0.0
   require_ssl: true
 email_client:
-  base_url: "localhost"
+  base_url: "https://api.sendgrid.com"
   sender_email: "bacbia3696@gmail.com"
