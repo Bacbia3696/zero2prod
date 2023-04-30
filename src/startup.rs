@@ -36,7 +36,12 @@ impl Application {
 
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr()?.port();
-        let server = run(listener, connection_pool, email_client)?;
+        let server = run(
+            listener,
+            connection_pool,
+            email_client,
+            configuration.application.base_url,
+        )?;
         Ok(Self { server, port })
     }
 
@@ -49,14 +54,21 @@ impl Application {
     }
 }
 
-pub fn run(listener: TcpListener, pool: PgPool, email_client: EmailClient) -> eyre::Result<Server> {
+pub fn run(
+    listener: TcpListener,
+    pool: PgPool,
+    email_client: EmailClient,
+    base_url: String,
+) -> eyre::Result<Server> {
     Ok(HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
             .service(routes::health_check)
             .service(routes::subscribe)
+            .service(routes::subscribe_confirm)
             .app_data(Data::new(pool.clone()))
             .app_data(Data::new(email_client.clone()))
+            .app_data(Data::new(base_url.clone()))
     })
     .listen(listener)?
     .run())

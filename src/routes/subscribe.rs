@@ -31,17 +31,24 @@ pub async fn subscribe(
     form: web::Form<FormData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
+    base_url: web::Data<String>,
 ) -> HttpResponse {
     let new_subscriber = match form.0.try_into() {
         Ok(new_subscriber) => new_subscriber,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
-    let Ok(res) = insert_subscriber(&pool, &new_subscriber).await else {
+    let Ok(_) = insert_subscriber(&pool, &new_subscriber).await else {
         return HttpResponse::InternalServerError().finish();
     };
-    let confirmation_link = "https://my-api.com/subscriptions/confirm";
+    send_confirmation_email(&email_client, &base_url).await;
+    HttpResponse::Ok().finish()
+}
 
-    let res= email_client
+#[tracing::instrument(name = "Send confirmation email", skip(email_client, base_url))]
+async fn send_confirmation_email(email_client: &EmailClient, base_url: &str) {
+    let confirmation_link = format!("{}/subscriptions/confirm", base_url);
+    dbg!(&confirmation_link);
+    email_client
         .send_email(
             SubscriberEmail::parse("bacbia@gmail.com".to_string()).unwrap(),
             "Welcome!",
@@ -57,14 +64,13 @@ pub async fn subscribe(
         )
         .await
         .unwrap();
-    HttpResponse::Ok().finish()
 }
 
 #[tracing::instrument(
     name = "Saving new subscriber details in the database",
     skip(new_subscriber, pool)
 )]
-pub async fn insert_subscriber(
+async fn insert_subscriber(
     pool: &PgPool,
     new_subscriber: &NewSubscriber,
 ) -> Result<(), sqlx::Error> {

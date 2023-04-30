@@ -8,7 +8,7 @@ use wiremock::{
 use crate::helper::spawn_app;
 
 #[tokio::test]
-async fn subscribe_return_200_for_valid_form_data() {
+async fn subscribe_persist_new_subscriber() {
     info!("subscribe_return_200_for_valid_form_data");
     let app = spawn_app().await;
 
@@ -21,14 +21,17 @@ async fn subscribe_return_200_for_valid_form_data() {
         .await;
     let res = app.post_subscriptions(body).await;
 
+    dbg!(&res);
+
     // make sure that subscriptions is saved
-    let saved = query!("select email, name from subscriptions")
+    let saved = query!("select email, name, status from subscriptions")
         .fetch_one(&app.pool)
         .await
         .expect("Failed to query DB");
 
     assert_eq!("ursula_le_guin@gmail.com", saved.email);
     assert_eq!("le guin", saved.name);
+    assert_eq!("pending_confirmation", saved.status);
     assert_eq!(http::StatusCode::OK, res.status())
 }
 
