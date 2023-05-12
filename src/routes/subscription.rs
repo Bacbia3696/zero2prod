@@ -1,7 +1,7 @@
 use actix_web::{post, web, HttpResponse};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::Deserialize;
-use sqlx::{types::chrono::Utc, PgPool};
+use sqlx::{types::chrono::Utc, PgPool, Postgres, Transaction};
 use tracing::info;
 use uuid::Uuid;
 
@@ -27,7 +27,6 @@ impl TryFrom<FormData> for NewSubscriber {
     }
 }
 
-#[tracing::instrument(name = "Adding a new subscriber", skip(form, pool, email_client))]
 #[post("/subscriptions")]
 pub async fn subscribe(
     form: web::Form<FormData>,
@@ -35,20 +34,31 @@ pub async fn subscribe(
     email_client: web::Data<EmailClient>,
     base_url: web::Data<String>,
 ) -> HttpResponse {
+    info!("start");
+
     let new_subscriber = match form.0.try_into() {
         Ok(new_subscriber) => new_subscriber,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
-    let Ok(subscriber_id) = insert_subscriber(&pool, &new_subscriber).await else {
+    // transaction
+    let mut transaction = match pool.begin().await {
+        Ok(transaction) => transaction,
+        Err(_) => return HttpResponse::InternalServerError().finish(),
+    };
+
+    let Ok(subscriber_id) = insert_subscriber(&mut transaction, &new_subscriber).await else {
         return HttpResponse::InternalServerError().finish();
     };
     let subscription_token = generate_subscription_token();
-    if store_token(&pool, subscriber_id, &subscription_token)
+    if store_token(&mut transaction, subscriber_id, &subscription_token)
         .await
         .is_err()
     {
         return HttpResponse::InternalServerError().finish();
     }
+    if transaction.commit().await.is_err() {
+        return HttpResponse::InternalServerError().finish();
+    };
     send_confirmation_email(
         &email_client,
         new_subscriber,
@@ -94,7 +104,7 @@ async fn send_confirmation_email(
     skip(new_subscriber, pool)
 )]
 async fn insert_subscriber(
-    pool: &PgPool,
+    pool: &mut Transaction<'_, Postgres>,
     new_subscriber: &NewSubscriber,
 ) -> Result<Uuid, sqlx::Error> {
     let subscriber_id = Uuid::new_v4();
@@ -130,7 +140,7 @@ fn generate_subscription_token() -> String {
 
 #[tracing::instrument(name = "Store subscription token in the database", skip(pool))]
 pub async fn store_token(
-    pool: &PgPool,
+    pool: &mut Transaction<'_, Postgres>,
     subscriber_id: Uuid,
     subscription_token: &str,
 ) -> Result<(), sqlx::Error> {
