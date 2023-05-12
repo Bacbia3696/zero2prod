@@ -21,8 +21,6 @@ async fn subscribe_persist_new_subscriber() {
         .await;
     let res = app.post_subscriptions(body).await;
 
-    dbg!(&res);
-
     // make sure that subscriptions is saved
     let saved = query!("select email, name, status from subscriptions")
         .fetch_one(&app.pool)
@@ -110,17 +108,5 @@ async fn subscribe_sends_a_confirmation_email_with_a_link() {
     // Get the first intercepted request
     let email_request = &app.email_server.received_requests().await.unwrap()[0];
     // Parse the body as JSON, starting from raw bytes
-    let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
-    // Extract the link from one of the request fields.
-    let get_link = |s: &str| {
-        let links: Vec<_> = linkify::LinkFinder::new()
-            .links(s)
-            .filter(|l| *l.kind() == linkify::LinkKind::Url)
-            .collect();
-        assert_eq!(links.len(), 1);
-        links[0].as_str().to_owned()
-    };
-    let text_link = get_link(body["content"][0]["value"].as_str().unwrap());
-    let html_link = get_link(body["content"][1]["value"].as_str().unwrap()); // The two links should be identical
-    assert_eq!(text_link, html_link);
+    app.get_confirmation_link(email_request);
 }

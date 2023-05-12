@@ -1,7 +1,7 @@
 application:
   host: 127.0.0.1
   port: 8000
-  base_url: http://localhost
+  base_url: http://127.0.0.1
 database:
   host: "127.0.0.1"
   port: 5432
@@ -10,7 +10,7 @@ database:
   database_name: "newsletter"
   require_ssl: false
 email_client:
-  base_url: "http://localhost"
-  sender_email: "test@gmail.com"
+  base_url: "https://api.sendgrid.com"
+  sender_email: "bacbia3696@gmail.com"
   authorization_token: "my-secret-token"
   timeout_milliseconds: 10000

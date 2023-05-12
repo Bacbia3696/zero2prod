@@ -16,6 +16,7 @@ pub struct AppTest {
     pub address: String,
     pub pool: PgPool,
     pub email_server: MockServer,
+    pub port: u16,
 }
 
 impl AppTest {
@@ -27,6 +28,23 @@ impl AppTest {
             .send()
             .await
             .expect("Failed to execute request.")
+    }
+
+    pub fn get_confirmation_link(&self, email_request: &wiremock::Request) -> String {
+        let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
+        // Extract the link from one of the request fields.
+        let get_link = |s: &str| {
+            let links: Vec<_> = linkify::LinkFinder::new()
+                .links(s)
+                .filter(|l| *l.kind() == linkify::LinkKind::Url)
+                .collect();
+            assert_eq!(links.len(), 1);
+            links[0].as_str().to_owned()
+        };
+        let text_link = get_link(body["content"][0]["value"].as_str().unwrap());
+        let html_link = get_link(body["content"][1]["value"].as_str().unwrap()); // The two links should be identical
+        assert_eq!(text_link, html_link);
+        text_link
     }
 }
 
@@ -55,6 +73,7 @@ pub async fn spawn_app() -> AppTest {
         address: format!("http://localhost:{}", app.port),
         pool,
         email_server,
+        port: app.port,
     }
 }
 

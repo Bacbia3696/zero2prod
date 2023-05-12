@@ -1,6 +1,8 @@
 use actix_web::{post, web, HttpResponse};
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::Deserialize;
 use sqlx::{types::chrono::Utc, PgPool};
+use tracing::info;
 use uuid::Uuid;
 
 use crate::{
@@ -37,20 +39,41 @@ pub async fn subscribe(
         Ok(new_subscriber) => new_subscriber,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
-    let Ok(_) = insert_subscriber(&pool, &new_subscriber).await else {
+    let Ok(subscriber_id) = insert_subscriber(&pool, &new_subscriber).await else {
         return HttpResponse::InternalServerError().finish();
     };
-    send_confirmation_email(&email_client, &base_url).await;
+    let subscription_token = generate_subscription_token();
+    if store_token(&pool, subscriber_id, &subscription_token)
+        .await
+        .is_err()
+    {
+        return HttpResponse::InternalServerError().finish();
+    }
+    send_confirmation_email(
+        &email_client,
+        new_subscriber,
+        &base_url,
+        &subscription_token,
+    )
+    .await
+    .unwrap();
     HttpResponse::Ok().finish()
 }
 
 #[tracing::instrument(name = "Send confirmation email", skip(email_client, base_url))]
-async fn send_confirmation_email(email_client: &EmailClient, base_url: &str) {
-    let confirmation_link = format!("{}/subscriptions/confirm", base_url);
-    dbg!(&confirmation_link);
+async fn send_confirmation_email(
+    email_client: &EmailClient,
+    new_subscriber: NewSubscriber,
+    base_url: &str,
+    subscription_token: &str,
+) -> Result<(), reqwest::Error> {
+    let confirmation_link = format!(
+        "{}/subscriptions/confirm?subscription_token={}",
+        base_url, subscription_token
+    );
     email_client
         .send_email(
-            SubscriberEmail::parse("bacbia@gmail.com".to_string()).unwrap(),
+            new_subscriber.email,
             "Welcome!",
             &format!(
                 "Welcome to our newsletter!<br />\
@@ -62,8 +85,8 @@ async fn send_confirmation_email(email_client: &EmailClient, base_url: &str) {
                 confirmation_link
             ),
         )
-        .await
-        .unwrap();
+        .await?;
+    Ok(())
 }
 
 #[tracing::instrument(
@@ -73,17 +96,50 @@ async fn send_confirmation_email(email_client: &EmailClient, base_url: &str) {
 async fn insert_subscriber(
     pool: &PgPool,
     new_subscriber: &NewSubscriber,
-) -> Result<(), sqlx::Error> {
+) -> Result<Uuid, sqlx::Error> {
+    let subscriber_id = Uuid::new_v4();
     sqlx::query!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at, status)
     VALUES ($1, $2, $3, $4, $5)
 "#,
-        Uuid::new_v4(),
+        subscriber_id,
         new_subscriber.email.as_ref(),
         new_subscriber.name.as_ref(),
         Utc::now(),
         "pending_confirmation",
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+    Ok(subscriber_id)
+}
+
+/// Generate a random 25-characters-long case-sensitive subscription token.
+fn generate_subscription_token() -> String {
+    let rng = thread_rng();
+    // String:
+    rng.sample_iter(Alphanumeric)
+        .take(25)
+        .map(char::from)
+        .collect()
+}
+
+#[tracing::instrument(name = "Store subscription token in the database", skip(pool))]
+pub async fn store_token(
+    pool: &PgPool,
+    subscriber_id: Uuid,
+    subscription_token: &str,
+) -> Result<(), sqlx::Error> {
+    info!("Store token");
+    sqlx::query!(
+        r#"INSERT INTO subscription_tokens (subscription_token, subscriber_id)
+        VALUES ($1, $2)"#,
+        subscription_token,
+        subscriber_id
     )
     .execute(pool)
     .await

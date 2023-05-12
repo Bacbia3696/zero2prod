@@ -1,7 +1,7 @@
 mod health_check;
-mod subscribe;
+mod subscription;
 mod subscriptions_confirm;
 
 pub use health_check::*;
-pub use subscribe::*;
+pub use subscription::*;
 pub use subscriptions_confirm::*;

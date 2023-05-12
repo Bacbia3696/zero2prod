@@ -63,7 +63,7 @@ impl EmailClient {
             .post(&url)
             .json(&req_body)
             .bearer_auth(self.authorization_token.expose_secret());
-        builder.send().await?.error_for_status()?;
+        let res = builder.send().await?.error_for_status()?;
         Ok(())
     }
 }
