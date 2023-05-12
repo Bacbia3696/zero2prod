@@ -2,11 +2,10 @@ use std::{io, net::TcpListener};
 
 use actix_web::{dev::Server, web::Data, App, HttpServer};
 use sqlx::postgres::PgPoolOptions;
-
-use crate::{configuration::Settings, email_client::EmailClient, routes};
-
 use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
+
+use crate::{configuration::Settings, email_client::EmailClient, routes};
 
 pub struct Application {
     pub server: Server,
