@@ -65,6 +65,7 @@ pub fn run(
             .service(routes::health_check)
             .service(routes::subscribe)
             .service(routes::subscribe_confirm)
+            .service(routes::publish_newsletter)
             .app_data(Data::new(pool.clone()))
             .app_data(Data::new(email_client.clone()))
             .app_data(Data::new(base_url.clone()))

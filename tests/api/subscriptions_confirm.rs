@@ -1,4 +1,3 @@
-
 use reqwest::Url;
 use sqlx::query;
 use wiremock::{

@@ -9,7 +9,7 @@ struct Parameters {
     subscription_token: String,
 }
 
-#[tracing::instrument(name = "Confirm pending subscription", skip(pool))]
+#[tracing::instrument(skip(pool))]
 #[get("/subscriptions/confirm")]
 async fn subscribe_confirm(
     parameters: web::Query<Parameters>,
@@ -32,7 +32,7 @@ async fn subscribe_confirm(
     }
 }
 
-#[tracing::instrument(name = "Mark subscriber as confirmed", skip(subscriber_id, pool))]
+#[tracing::instrument(skip(subscriber_id, pool))]
 pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"UPDATE subscriptions SET status = 'confirmed' WHERE id = $1"#,

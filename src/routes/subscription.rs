@@ -29,6 +29,7 @@ impl TryFrom<FormData> for NewSubscriber {
     }
 }
 
+#[tracing::instrument(skip(form, pool, email_client, base_url))]
 #[post("/subscriptions")]
 pub async fn subscribe(
     form: web::Form<FormData>,
@@ -42,6 +43,7 @@ pub async fn subscribe(
         .begin()
         .await
         .context("Failed to acquire a Postgres connection from the Pool")?;
+
     let subscriber_id = insert_subscriber(&mut transaction, &new_subscriber)
         .await
         .context("Failed to insert new subscriber in the DB.")?;
@@ -49,6 +51,7 @@ pub async fn subscribe(
     store_token(&mut transaction, subscriber_id, &subscription_token)
         .await
         .context("Failed to store token")?;
+
     transaction.commit().await.context("Failed to commit tx")?;
     send_confirmation_email(
         &email_client,
@@ -61,7 +64,7 @@ pub async fn subscribe(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[tracing::instrument(name = "Send confirmation email", skip(email_client, base_url))]
+#[tracing::instrument(skip(email_client, base_url))]
 async fn send_confirmation_email(
     email_client: &EmailClient,
     new_subscriber: NewSubscriber,
@@ -74,7 +77,7 @@ async fn send_confirmation_email(
     );
     email_client
         .send_email(
-            new_subscriber.email,
+            &new_subscriber.email,
             "Welcome!",
             &format!(
                 "Welcome to our newsletter!<br />\
@@ -90,10 +93,7 @@ async fn send_confirmation_email(
     Ok(())
 }
 
-#[tracing::instrument(
-    name = "Saving new subscriber details in the database",
-    skip(new_subscriber, pool)
-)]
+#[tracing::instrument(skip(new_subscriber, pool))]
 async fn insert_subscriber(
     pool: &mut Transaction<'_, Postgres>,
     new_subscriber: &NewSubscriber,
@@ -135,7 +135,6 @@ pub async fn store_token(
     subscriber_id: Uuid,
     subscription_token: &str,
 ) -> Result<(), SubscribeError> {
-    info!("Store token");
     sqlx::query!(
         r#"INSERT INTO subscription_tokens (subscription_token, subscriber_id)
         VALUES ($1, $2)"#,
@@ -152,12 +151,32 @@ pub async fn store_token(
     Ok(())
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error)]
 pub enum SubscribeError {
     #[error("{0}")]
     ValidationError(String),
     #[error("transparent")]
     UnexpectedError(#[from] eyre::Error),
+}
+
+// Same logic to get the full error chain on `Debug`
+impl std::fmt::Debug for SubscribeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        error_chain_fmt(self, f)
+    }
+}
+
+pub fn error_chain_fmt(
+    e: &impl std::error::Error,
+    f: &mut std::fmt::Formatter<'_>,
+) -> std::fmt::Result {
+    writeln!(f, "{}\n", e)?;
+    let mut current = e.source();
+    while let Some(cause) = current {
+        writeln!(f, "Caused by:\n\t{}", cause)?;
+        current = cause.source();
+    }
+    Ok(())
 }
 
 impl ResponseError for SubscribeError {
